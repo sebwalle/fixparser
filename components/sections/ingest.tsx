@@ -29,7 +29,26 @@ export function IngestSection({ onMessageClick }: IngestSectionProps) {
 
     eventSource.onmessage = (event) => {
       try {
-        const message = JSON.parse(event.data) as StoredMessage;
+        const data = JSON.parse(event.data);
+
+        // Skip connection messages
+        if (data.type === 'connected') {
+          return;
+        }
+
+        // Convert FixMessage to StoredMessage format
+        const message: StoredMessage = {
+          id: data.id,
+          receivedAt: new Date(data.receivedAt || Date.now()),
+          parsed: {
+            fields: data.fields,
+            summary: data.summary,
+            warnings: data.warnings || [],
+            orderKey: data.summary?.orderKey,
+            raw: data.rawMessage || '',
+          },
+        };
+
         setMessages((prev) => [message, ...prev].slice(0, 50)); // Keep last 50
         toast.success('New message received');
       } catch (error) {
