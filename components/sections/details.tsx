@@ -14,10 +14,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
-import type { StoredMessage } from '@/lib/types';
+import type { FixMessage } from '@/lib/types';
+import { getFieldValueDescription } from '@/lib/fix/dictionary';
 
 interface DetailsSectionProps {
-  selectedMessage: StoredMessage | null;
+  selectedMessage: FixMessage | null;
 }
 
 type SortColumn = 'tag' | 'name' | null;
@@ -41,7 +42,7 @@ export function DetailsSection({ selectedMessage }: DetailsSectionProps) {
   const getSortedFields = () => {
     if (!selectedMessage) return [];
 
-    const fields = [...selectedMessage.parsed.fields];
+    const fields = [...selectedMessage.fields];
 
     if (!sortColumn) return fields;
 
@@ -96,7 +97,7 @@ export function DetailsSection({ selectedMessage }: DetailsSectionProps) {
     if (!selectedMessage) return;
 
     try {
-      await navigator.clipboard.writeText(selectedMessage.parsed.raw);
+      await navigator.clipboard.writeText(selectedMessage.rawMessage);
       toast.success('Raw message copied to clipboard');
     } catch (error) {
       toast.error('Failed to copy raw message');
@@ -150,7 +151,7 @@ export function DetailsSection({ selectedMessage }: DetailsSectionProps) {
   }
 
   const sortedFields = getSortedFields();
-  const summary = selectedMessage.parsed.summary;
+  const summary = selectedMessage.summary;
 
   return (
     <section className="w-full py-8" data-section="details">
@@ -209,7 +210,7 @@ export function DetailsSection({ selectedMessage }: DetailsSectionProps) {
                 <TableHeader>
                   <TableRow>
                     <TableHead
-                      className="cursor-pointer hover:bg-accent"
+                      className="cursor-pointer hover:bg-accent px-2"
                       onClick={() => handleSort('tag')}
                     >
                       <div className="flex items-center gap-1">
@@ -222,7 +223,7 @@ export function DetailsSection({ selectedMessage }: DetailsSectionProps) {
                       </div>
                     </TableHead>
                     <TableHead
-                      className="cursor-pointer hover:bg-accent"
+                      className="cursor-pointer hover:bg-accent px-2"
                       onClick={() => handleSort('name')}
                     >
                       <div className="flex items-center gap-1">
@@ -234,17 +235,25 @@ export function DetailsSection({ selectedMessage }: DetailsSectionProps) {
                         )}
                       </div>
                     </TableHead>
-                    <TableHead>Value</TableHead>
+                    <TableHead className="px-2">Value</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedFields.map((field, index) => (
-                    <TableRow key={`${field.tag}-${index}`}>
-                      <TableCell className="font-mono text-xs">{field.tag}</TableCell>
-                      <TableCell className="font-medium">{field.name}</TableCell>
-                      <TableCell className="font-mono text-sm">{field.value}</TableCell>
-                    </TableRow>
-                  ))}
+                  {sortedFields.map((field, index) => {
+                    const isEven = index % 2 === 1;
+                    return (
+                      <TableRow 
+                        key={`${field.tag}-${index}`}
+                        style={isEven ? { backgroundColor: 'hsl(var(--muted) / 0.5)' } : undefined}
+                      >
+                        <TableCell className="font-mono text-xs px-2 py-1">{field.tag}</TableCell>
+                        <TableCell className="font-medium px-2 py-1">{field.name}</TableCell>
+                        <TableCell className="font-mono text-sm px-2 py-1">
+                          {getFieldValueDescription(field.tag, field.value)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </ScrollArea>

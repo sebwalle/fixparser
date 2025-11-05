@@ -6,23 +6,23 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import type { StoredMessage } from '@/lib/types';
+import type { FixMessage } from '@/lib/types';
 
 interface MessagesSectionProps {
-  onMessageClick?: (message: StoredMessage) => void;
+  onMessageClick?: (message: FixMessage) => void;
   onClearFilter?: () => void;
   selectedOrderKey?: string | null;
 }
 
 export function MessagesSection({ onMessageClick, onClearFilter, selectedOrderKey }: MessagesSectionProps) {
-  const [messages, setMessages] = useState<StoredMessage[]>([]);
+  const [messages, setMessages] = useState<FixMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | undefined>(undefined);
   const [prevCursors, setPrevCursors] = useState<string[]>([]);
   const [hasMore, setHasMore] = useState(false);
 
   // Fetch messages from API
-  const fetchMessages = useCallback(async (cursor?: string, direction: 'next' | 'prev' = 'next') => {
+  const fetchMessages = useCallback(async (cursor?: string) => {
     try {
       setIsLoading(true);
       const params = new URLSearchParams();
@@ -40,12 +40,7 @@ export function MessagesSection({ onMessageClick, onClearFilter, selectedOrderKe
       }
 
       const result = await response.json();
-      const fetchedMessages = result.data.map((msg: any) => ({
-        ...msg,
-        receivedAt: new Date(msg.receivedAt),
-      }));
-
-      setMessages(fetchedMessages);
+      setMessages(result.data);
       setNextCursor(result.meta.nextCursor);
       setHasMore(!!result.meta.nextCursor);
     } catch (error) {
@@ -71,7 +66,7 @@ export function MessagesSection({ onMessageClick, onClearFilter, selectedOrderKe
   const handleNext = () => {
     if (nextCursor) {
       setPrevCursors((prev) => [...prev, nextCursor]);
-      fetchMessages(nextCursor, 'next');
+      fetchMessages(nextCursor);
     }
   };
 
@@ -80,11 +75,11 @@ export function MessagesSection({ onMessageClick, onClearFilter, selectedOrderKe
       const newPrevCursors = [...prevCursors];
       const prevCursor = newPrevCursors.pop();
       setPrevCursors(newPrevCursors);
-      fetchMessages(prevCursor, 'prev');
+      fetchMessages(prevCursor);
     }
   };
 
-  const handleMessageClick = (message: StoredMessage) => {
+  const handleMessageClick = (message: FixMessage) => {
     onMessageClick?.(message);
 
     // Scroll to Details section
@@ -183,47 +178,49 @@ export function MessagesSection({ onMessageClick, onClearFilter, selectedOrderKe
                         </tr>
                       </thead>
                       <tbody>
-                        {messages.map((message) => (
+                        {messages.map((message, index) => (
                           <tr
                             key={message.id}
-                            className="border-b cursor-pointer hover:bg-accent transition-colors"
+                            className={`border-b cursor-pointer hover:bg-accent transition-colors ${
+                              index % 2 === 1 ? 'bg-muted/30' : ''
+                            }`}
                             onClick={() => handleMessageClick(message)}
                           >
                             <td className="p-2 text-xs text-muted-foreground whitespace-nowrap">
-                              {message.receivedAt.toLocaleString()}
+                              {message.receivedAt ? new Date(message.receivedAt).toLocaleString() : '-'}
                             </td>
                             <td className="p-2">
                               <Badge variant="outline" className="text-xs">
-                                {formatMsgType(message.parsed.summary.msgType)}
+                                {formatMsgType(message.summary.msgType)}
                               </Badge>
                             </td>
                             <td className="p-2 font-mono text-xs">
-                              {message.parsed.summary.transType || '-'}
+                              {message.summary.transType || '-'}
                             </td>
                             <td className="p-2">
-                              {message.parsed.summary.ordStatus ? (
+                              {message.summary.ordStatus ? (
                                 <Badge variant="secondary" className="text-xs">
-                                  {formatStatus(message.parsed.summary.ordStatus)}
+                                  {formatStatus(message.summary.ordStatus)}
                                 </Badge>
                               ) : (
                                 '-'
                               )}
                             </td>
                             <td className="p-2 font-mono text-xs">
-                              {message.parsed.summary.clOrdId || '-'}
+                              {message.summary.clOrdId || '-'}
                             </td>
                             <td className="p-2 font-mono text-xs">
-                              {message.parsed.summary.orderId || '-'}
+                              {message.summary.orderId || '-'}
                             </td>
                             <td className="p-2 font-semibold">
-                              {message.parsed.summary.symbol || '-'}
+                              {message.summary.symbol || '-'}
                             </td>
-                            <td className="p-2">{formatSide(message.parsed.summary.side)}</td>
+                            <td className="p-2">{formatSide(message.summary.side)}</td>
                             <td className="p-2 text-right">
-                              {message.parsed.summary.qty || '-'}
+                              {message.summary.qty || '-'}
                             </td>
                             <td className="p-2 text-right">
-                              {message.parsed.summary.price || '-'}
+                              {message.summary.price || '-'}
                             </td>
                           </tr>
                         ))}

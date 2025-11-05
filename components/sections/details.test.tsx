@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { DetailsSection } from './details';
-import type { StoredMessage } from '@/lib/types';
+import type { FixMessage } from '@/lib/types';
 
 // Mock toast
 vi.mock('sonner', () => ({
@@ -17,31 +17,29 @@ vi.mock('@/components/ui/scroll-area', () => ({
 }));
 
 describe('DetailsSection', () => {
-  const mockMessage: StoredMessage = {
+  const mockMessage: FixMessage = {
     id: 'msg123',
-    receivedAt: new Date('2025-01-01T10:00:00Z'),
-    parsed: {
-      fields: [
-        { tag: '8', name: 'BeginString', value: 'FIX.4.4' },
-        { tag: '35', name: 'MsgType', value: 'D' },
-        { tag: '11', name: 'ClOrdID', value: 'ORDER001' },
-        { tag: '55', name: 'Symbol', value: 'AAPL' },
-        { tag: '54', name: 'Side', value: '1' },
-        { tag: '38', name: 'OrderQty', value: '100' },
-      ],
-      summary: {
-        msgType: 'D',
-        clOrdId: 'ORDER001',
-        orderId: 'ORD123',
-        symbol: 'AAPL',
-        side: '1',
-        qty: '100',
-        price: '150.00',
-        ordStatus: '0',
-      },
-      warnings: [],
-      raw: '8=FIX.4.4|9=100|35=D|11=ORDER001|55=AAPL|54=1|38=100|',
+    receivedAt: '2025-01-01T10:00:00Z',
+    rawMessage: '8=FIX.4.4|9=100|35=D|11=ORDER001|55=AAPL|54=1|38=100|',
+    fields: [
+      { tag: '8', name: 'BeginString', value: 'FIX.4.4' },
+      { tag: '35', name: 'MsgType', value: 'D' },
+      { tag: '11', name: 'ClOrdID', value: 'ORDER001' },
+      { tag: '55', name: 'Symbol', value: 'AAPL' },
+      { tag: '54', name: 'Side', value: '1' },
+      { tag: '38', name: 'OrderQty', value: '100' },
+    ],
+    summary: {
+      msgType: 'D',
+      clOrdId: 'ORDER001',
+      orderId: 'ORD123',
+      symbol: 'AAPL',
+      side: '1',
+      qty: '100',
+      price: '150.00',
+      ordStatus: '0',
     },
+    warnings: [],
   };
 
   let clipboardWriteTextMock: ReturnType<typeof vi.fn>;
@@ -136,9 +134,15 @@ describe('DetailsSection', () => {
     it('should display field values', () => {
       render(<DetailsSection selectedMessage={mockMessage} />);
 
+      // Check that basic field values are displayed
       expect(screen.getByText('FIX.4.4')).toBeInTheDocument();
-      expect(screen.getByText('D')).toBeInTheDocument();
       expect(screen.getByText('ORDER001')).toBeInTheDocument();
+
+      // MsgType value (tag 35) should show with enum description
+      // The text might be split across elements, so use a flexible matcher
+      const table = screen.getByRole('table');
+      expect(table.textContent).toContain('D');
+      expect(table.textContent).toContain('NewOrder');
     });
 
     it('should display field count', () => {
@@ -344,7 +348,7 @@ describe('DetailsSection', () => {
   describe('Message Type Formatting', () => {
     it('should format NewOrder message type', () => {
       const message = { ...mockMessage };
-      message.parsed.summary.msgType = 'D';
+      message.summary.msgType = 'D';
       render(<DetailsSection selectedMessage={message} />);
 
       expect(screen.getByText('NewOrder')).toBeInTheDocument();
@@ -352,7 +356,7 @@ describe('DetailsSection', () => {
 
     it('should format ExecReport message type', () => {
       const message = { ...mockMessage };
-      message.parsed.summary.msgType = '8';
+      message.summary.msgType = '8';
       render(<DetailsSection selectedMessage={message} />);
 
       expect(screen.getByText('ExecReport')).toBeInTheDocument();
@@ -360,7 +364,7 @@ describe('DetailsSection', () => {
 
     it('should format CancelReq message type', () => {
       const message = { ...mockMessage };
-      message.parsed.summary.msgType = 'F';
+      message.summary.msgType = 'F';
       render(<DetailsSection selectedMessage={message} />);
 
       expect(screen.getByText('CancelReq')).toBeInTheDocument();
@@ -370,7 +374,7 @@ describe('DetailsSection', () => {
   describe('Order Status Formatting', () => {
     it('should format New status', () => {
       const message = { ...mockMessage };
-      message.parsed.summary.ordStatus = '0';
+      message.summary.ordStatus = '0';
       render(<DetailsSection selectedMessage={message} />);
 
       expect(screen.getByText('New')).toBeInTheDocument();
@@ -378,7 +382,7 @@ describe('DetailsSection', () => {
 
     it('should format Partial status', () => {
       const message = { ...mockMessage };
-      message.parsed.summary.ordStatus = '1';
+      message.summary.ordStatus = '1';
       render(<DetailsSection selectedMessage={message} />);
 
       expect(screen.getByText('Partial')).toBeInTheDocument();
@@ -386,7 +390,7 @@ describe('DetailsSection', () => {
 
     it('should format Filled status', () => {
       const message = { ...mockMessage };
-      message.parsed.summary.ordStatus = '2';
+      message.summary.ordStatus = '2';
       render(<DetailsSection selectedMessage={message} />);
 
       expect(screen.getByText('Filled')).toBeInTheDocument();
@@ -394,7 +398,7 @@ describe('DetailsSection', () => {
 
     it('should format Canceled status', () => {
       const message = { ...mockMessage };
-      message.parsed.summary.ordStatus = '4';
+      message.summary.ordStatus = '4';
       render(<DetailsSection selectedMessage={message} />);
 
       expect(screen.getByText('Canceled')).toBeInTheDocument();
@@ -404,7 +408,7 @@ describe('DetailsSection', () => {
   describe('Summary Header Conditionals', () => {
     it('should hide order status badge when not present', () => {
       const message = { ...mockMessage };
-      message.parsed.summary.ordStatus = undefined;
+      message.summary.ordStatus = undefined;
       render(<DetailsSection selectedMessage={message} />);
 
       // Should not display status badges like 'New', 'Filled', etc.
@@ -416,13 +420,10 @@ describe('DetailsSection', () => {
     it('should hide symbol when not present', () => {
       const message = {
         ...mockMessage,
-        parsed: {
-          ...mockMessage.parsed,
-          fields: mockMessage.parsed.fields.filter((f) => f.tag !== '55'), // Remove Symbol field
-          summary: {
-            ...mockMessage.parsed.summary,
-            symbol: undefined,
-          },
+        fields: mockMessage.fields.filter((f) => f.tag !== '55'), // Remove Symbol field
+        summary: {
+          ...mockMessage.summary,
+          symbol: undefined,
         },
       };
       const { container } = render(<DetailsSection selectedMessage={message} />);
@@ -435,7 +436,7 @@ describe('DetailsSection', () => {
 
     it('should hide ClOrdID when not present', () => {
       const message = { ...mockMessage };
-      message.parsed.summary.clOrdId = undefined;
+      message.summary.clOrdId = undefined;
       render(<DetailsSection selectedMessage={message} />);
 
       expect(screen.queryByText(/ClOrdID:/i)).not.toBeInTheDocument();
@@ -443,7 +444,7 @@ describe('DetailsSection', () => {
 
     it('should hide OrderID when not present', () => {
       const message = { ...mockMessage };
-      message.parsed.summary.orderId = undefined;
+      message.summary.orderId = undefined;
       render(<DetailsSection selectedMessage={message} />);
 
       expect(screen.queryByText(/OrderID:/i)).not.toBeInTheDocument();

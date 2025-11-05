@@ -7,13 +7,13 @@ import { IngestSection } from '@/components/sections/ingest';
 import { OrdersSection } from '@/components/sections/orders';
 import { MessagesSection } from '@/components/sections/messages';
 import { DetailsSection } from '@/components/sections/details';
-import type { StoredMessage } from '@/lib/types';
+import type { FixMessage } from '@/lib/types';
 
 export default function Home() {
-  const [selectedMessage, setSelectedMessage] = useState<StoredMessage | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<FixMessage | null>(null);
   const [selectedOrderKey, setSelectedOrderKey] = useState<string | null>(null);
 
-  const handleMessageClick = (message: StoredMessage | null) => {
+  const handleMessageClick = (message: FixMessage | null) => {
     setSelectedMessage(message);
   };
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MessagesSection } from './messages';
-import type { StoredMessage } from '@/lib/types';
+import type { FixMessage } from '@/lib/types';
 
 // Mock toast
 vi.mock('sonner', () => ({
@@ -18,45 +18,41 @@ vi.mock('@/components/ui/scroll-area', () => ({
 }));
 
 describe('MessagesSection', () => {
-  const mockMessages: StoredMessage[] = [
+  const mockMessages: FixMessage[] = [
     {
       id: 'msg1',
-      receivedAt: new Date('2025-01-01T10:00:00Z'),
-      parsed: {
-        fields: [],
-        summary: {
-          msgType: 'D',
-          clOrdId: 'ORDER001',
-          orderId: 'ORD123',
-          symbol: 'AAPL',
-          side: '1',
-          qty: '100',
-          price: '150.00',
-          transType: '0',
-          ordStatus: '0',
-        },
-        warnings: [],
-        raw: '8=FIX.4.4...',
+      receivedAt: '2025-01-01T10:00:00Z',
+      rawMessage: '8=FIX.4.4...',
+      fields: [],
+      summary: {
+        msgType: 'D',
+        clOrdId: 'ORDER001',
+        orderId: 'ORD123',
+        symbol: 'AAPL',
+        side: '1',
+        qty: '100',
+        price: '150.00',
+        transType: '0',
+        ordStatus: '0',
       },
+      warnings: [],
     },
     {
       id: 'msg2',
-      receivedAt: new Date('2025-01-01T10:05:00Z'),
-      parsed: {
-        fields: [],
-        summary: {
-          msgType: '8',
-          clOrdId: 'ORDER001',
-          orderId: 'ORD123',
-          symbol: 'AAPL',
-          side: '1',
-          qty: '100',
-          price: '150.00',
-          ordStatus: '2',
-        },
-        warnings: [],
-        raw: '8=FIX.4.4...',
+      receivedAt: '2025-01-01T10:05:00Z',
+      rawMessage: '8=FIX.4.4...',
+      fields: [],
+      summary: {
+        msgType: '8',
+        clOrdId: 'ORDER001',
+        orderId: 'ORD123',
+        symbol: 'AAPL',
+        side: '1',
+        qty: '100',
+        price: '150.00',
+        ordStatus: '2',
       },
+      warnings: [],
     },
   ];
 
@@ -83,7 +79,7 @@ describe('MessagesSection', () => {
       json: async () => ({
         data: mockMessages.map((msg) => ({
           ...msg,
-          receivedAt: msg.receivedAt.toISOString(),
+          receivedAt: msg.receivedAt,
         })),
         meta: { nextCursor: null, total: 2 },
       }),
@@ -135,7 +131,7 @@ describe('MessagesSection', () => {
       json: async () => ({
         data: mockMessages.map((msg) => ({
           ...msg,
-          receivedAt: msg.receivedAt.toISOString(),
+          receivedAt: msg.receivedAt,
         })),
         meta: { nextCursor: null, total: 2 },
       }),
@@ -166,7 +162,7 @@ describe('MessagesSection', () => {
       json: async () => ({
         data: [mockMessages[0]].map((msg) => ({
           ...msg,
-          receivedAt: msg.receivedAt.toISOString(),
+          receivedAt: msg.receivedAt,
         })),
         meta: { nextCursor: null, total: 1 },
       }),
@@ -223,7 +219,7 @@ describe('MessagesSection', () => {
       json: async () => ({
         data: mockMessages.map((msg) => ({
           ...msg,
-          receivedAt: msg.receivedAt.toISOString(),
+          receivedAt: msg.receivedAt,
         })),
         meta: { nextCursor: null, total: 2 },
       }),
@@ -243,7 +239,7 @@ describe('MessagesSection', () => {
       json: async () => ({
         data: mockMessages.map((msg) => ({
           ...msg,
-          receivedAt: msg.receivedAt.toISOString(),
+          receivedAt: msg.receivedAt,
         })),
         meta: { nextCursor: null, total: 2 },
       }),
@@ -263,7 +259,7 @@ describe('MessagesSection', () => {
       json: async () => ({
         data: mockMessages.map((msg) => ({
           ...msg,
-          receivedAt: msg.receivedAt.toISOString(),
+          receivedAt: msg.receivedAt,
         })),
         meta: { nextCursor: null, total: 2 },
       }),
@@ -283,7 +279,7 @@ describe('MessagesSection', () => {
       json: async () => ({
         data: mockMessages.map((msg) => ({
           ...msg,
-          receivedAt: msg.receivedAt.toISOString(),
+          receivedAt: msg.receivedAt,
         })),
         meta: { nextCursor: 'cursor123', total: 100 },
       }),
@@ -303,7 +299,7 @@ describe('MessagesSection', () => {
       json: async () => ({
         data: mockMessages.map((msg) => ({
           ...msg,
-          receivedAt: msg.receivedAt.toISOString(),
+          receivedAt: msg.receivedAt,
         })),
         meta: { nextCursor: null, total: 2 },
       }),
@@ -323,7 +319,7 @@ describe('MessagesSection', () => {
       json: async () => ({
         data: mockMessages.map((msg) => ({
           ...msg,
-          receivedAt: msg.receivedAt.toISOString(),
+          receivedAt: msg.receivedAt,
         })),
         meta: { nextCursor: null, total: 2 },
       }),
@@ -344,7 +340,7 @@ describe('MessagesSection', () => {
         json: async () => ({
           data: mockMessages.map((msg) => ({
             ...msg,
-            receivedAt: msg.receivedAt.toISOString(),
+            receivedAt: msg.receivedAt,
           })),
           meta: { nextCursor: 'cursor123', total: 100 },
         }),
@@ -378,7 +374,7 @@ describe('MessagesSection', () => {
       json: async () => ({
         data: mockMessages.map((msg) => ({
           ...msg,
-          receivedAt: msg.receivedAt.toISOString(),
+          receivedAt: msg.receivedAt,
         })),
         meta: { nextCursor: null, total: 2 },
       }),
@@ -414,7 +410,7 @@ describe('MessagesSection', () => {
       json: async () => ({
         data: mockMessages.map((msg) => ({
           ...msg,
-          receivedAt: msg.receivedAt.toISOString(),
+          receivedAt: msg.receivedAt,
         })),
         meta: { nextCursor: null, total: 2 },
       }),
@@ -443,28 +439,21 @@ describe('MessagesSection', () => {
   });
 
   it('should display dash for missing optional fields', async () => {
-    const messageWithMissingFields: StoredMessage = {
+    const messageWithMissingFields: FixMessage = {
       id: 'msg3',
-      receivedAt: new Date('2025-01-01T10:00:00Z'),
-      parsed: {
-        fields: [],
-        summary: {
-          msgType: 'D',
-        },
-        warnings: [],
-        raw: '8=FIX.4.4...',
+      receivedAt: '2025-01-01T10:00:00Z',
+      rawMessage: '8=FIX.4.4...',
+      fields: [],
+      summary: {
+        msgType: 'D',
       },
+      warnings: [],
     };
 
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        data: [
-          {
-            ...messageWithMissingFields,
-            receivedAt: messageWithMissingFields.receivedAt.toISOString(),
-          },
-        ],
+        data: [messageWithMissingFields],
         meta: { nextCursor: null, total: 1 },
       }),
     });

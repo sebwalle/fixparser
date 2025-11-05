@@ -9,15 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getAllSamples } from '@/lib/fix/samples';
 import { toast } from 'sonner';
-import type { StoredMessage } from '@/lib/types';
+import type { FixMessage } from '@/lib/types';
 
 interface IngestSectionProps {
-  onMessageClick?: (message: StoredMessage) => void;
+  onMessageClick?: (message: FixMessage) => void;
 }
 
 export function IngestSection({ onMessageClick }: IngestSectionProps) {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<StoredMessage[]>([]);
+  const [messages, setMessages] = useState<FixMessage[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSample, setSelectedSample] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -36,18 +36,8 @@ export function IngestSection({ onMessageClick }: IngestSectionProps) {
           return;
         }
 
-        // Convert FixMessage to StoredMessage format
-        const message: StoredMessage = {
-          id: data.id,
-          receivedAt: new Date(data.receivedAt || Date.now()),
-          parsed: {
-            fields: data.fields,
-            summary: data.summary,
-            warnings: data.warnings || [],
-            orderKey: data.summary?.orderKey,
-            raw: data.rawMessage || '',
-          },
-        };
+        // Use the FixMessage directly
+        const message: FixMessage = data;
 
         setMessages((prev) => [message, ...prev].slice(0, 50)); // Keep last 50
         toast.success('New message received');
@@ -150,9 +140,9 @@ export function IngestSection({ onMessageClick }: IngestSectionProps) {
     toast.info('Input cleared');
   };
 
-  const formatMessagePreview = (msg: StoredMessage): string => {
+  const formatMessagePreview = (msg: FixMessage): string => {
     const parts = [];
-    const summary = msg.parsed.summary;
+    const summary = msg.summary;
     if (summary.msgType) parts.push(`${summary.msgType}`);
     if (summary.clOrdId) parts.push(`#${summary.clOrdId}`);
     if (summary.symbol) parts.push(summary.symbol);
@@ -255,14 +245,14 @@ export function IngestSection({ onMessageClick }: IngestSectionProps) {
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <Badge variant="secondary" className="shrink-0">
-                            {msg.parsed.summary.msgType || 'Unknown'}
+                            {msg.summary.msgType || 'Unknown'}
                           </Badge>
                           <span className="text-sm truncate">
                             {formatMessagePreview(msg)}
                           </span>
                         </div>
                         <span className="text-xs text-muted-foreground shrink-0">
-                          {new Date(msg.receivedAt).toLocaleTimeString()}
+                          {msg.receivedAt ? new Date(msg.receivedAt).toLocaleTimeString() : '-'}
                         </span>
                       </div>
                     ))

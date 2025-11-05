@@ -99,7 +99,7 @@ describe('parseRelaxed', () => {
       expect(result.fields).toHaveLength(2);
       expect(result.fields[1]).toEqual({
         tag: '9999',
-        name: '9999',
+        name: 'Tag9999',
         value: 'CustomValue',
       });
     });
