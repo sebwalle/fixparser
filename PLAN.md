@@ -32,21 +32,21 @@ Building a production-ready FIX protocol analyzer with 4 main sections: Ingest, 
   - [x] Missing equals after numeric tags
 - [x] Write parser tests (`strict.test.ts`, `parser.test.ts`, `repair.test.ts`)
 
-## Phase 3: Storage & Backend Infrastructure
-- [ ] Create MessageStore interface
-- [ ] Implement in-memory store (`lib/store/memory.ts`)
-  - [ ] add() method
-  - [ ] list() with pagination and orderKey filter
-  - [ ] listOrders() with aggregation logic
-  - [ ] getById() method
-  - [ ] stream() for SSE broadcasting
-- [ ] Implement optional Vercel KV store (`lib/store/kv.ts`)
-- [ ] Create store factory based on USE_KV env
-- [ ] Implement orders aggregation logic
-  - [ ] Group by orderKey (ClOrdID)
-  - [ ] Extract originalQty, latestStatus, orderId, etc.
-  - [ ] Track firstSeenAt/lastSeenAt
-- [ ] Write storage tests (`orders.test.ts`)
+## Phase 3: Storage & Backend Infrastructure ✅
+- [x] Create MessageStore interface
+- [x] Implement in-memory store (`lib/store/memory.ts`)
+  - [x] add() method
+  - [x] list() with pagination and orderKey filter
+  - [x] listOrders() with aggregation logic
+  - [x] getById() method
+  - [x] stream() for SSE broadcasting
+- [x] Implement optional Vercel KV store (`lib/store/kv.ts`)
+- [x] Create store factory based on USE_KV env
+- [x] Implement orders aggregation logic
+  - [x] Group by orderKey (ClOrdID)
+  - [x] Extract originalQty, latestStatus, orderId, etc.
+  - [x] Track firstSeenAt/lastSeenAt
+- [x] Write storage tests (`orders.test.ts`)
 
 ## Phase 4: API Routes
 - [ ] Implement `/api/fix/parse` (Edge runtime)
@@ -267,9 +267,9 @@ fixparser/
 
 ## Progress Tracking
 - Total phases: 13
-- Completed: 2 (Phase 1, Phase 2)
+- Completed: 3 (Phase 1, Phase 2, Phase 3)
 - In progress: 0
-- Remaining: 11
+- Remaining: 10
 
 ## Notes
 - Focus on clean, readable code following user's test guidelines

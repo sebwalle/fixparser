@@ -16,7 +16,8 @@ export interface ParsedField {
  */
 export interface MessageSummary {
   msgType?: string;
-  clOrdId?: string;
+  orderKey?: string; // ClOrdID (tag 11) - primary key for grouping messages
+  clOrdId?: string; // Alias for orderKey
   orderId?: string;
   symbol?: string;
   side?: string;
@@ -59,15 +60,15 @@ export interface ParsedMessage {
  * Aggregated order row for display
  */
 export interface OrderRow {
-  orderKey: string;
-  orderId?: string;
-  symbol?: string;
-  side?: string;
-  originalQty?: string;
-  latestStatus?: string;
-  count: number;
-  firstSeenAt: Date;
-  lastSeenAt: Date;
+  orderKey: string; // ClOrdID (tag 11)
+  orderId: string; // OrderID (tag 37)
+  symbol: string; // Symbol (tag 55)
+  side: string; // Side (tag 54)
+  originalQty: string; // OrderQty (tag 38)
+  latestStatus: string; // OrdStatus (tag 39)
+  messageCount: number; // Number of messages for this order
+  firstSeenAt: string; // ISO 8601 timestamp
+  lastSeenAt: string; // ISO 8601 timestamp
 }
 
 /**
@@ -77,4 +78,17 @@ export interface StoredMessage {
   id: string;
   receivedAt: Date;
   parsed: ParsedMessage;
+}
+
+/**
+ * Complete FIX message for storage and API responses
+ * Combines parsed data with storage metadata
+ */
+export interface FixMessage {
+  id: string;
+  rawMessage: string;
+  fields: ParsedField[];
+  summary: MessageSummary;
+  receivedAt?: string; // ISO 8601 string for JSON serialization
+  warnings?: string[];
 }

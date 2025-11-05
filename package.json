@@ -51,5 +51,8 @@
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.7.1",
     "vitest": "^4.0.7"
+  },
+  "optionalDependencies": {
+    "@vercel/kv": "^3.0.0"
   }
 }
