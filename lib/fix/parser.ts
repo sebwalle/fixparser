@@ -55,6 +55,9 @@ function extractSummary(fields: ParsedField[]): MessageSummary {
   // OrdStatus: tag 39
   summary.ordStatus = fieldMap.get('39');
 
+  // orderKey is the same as clOrdId (tag 11)
+  summary.orderKey = summary.clOrdId;
+
   return summary;
 }
 

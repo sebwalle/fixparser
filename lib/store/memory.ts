@@ -9,11 +9,16 @@ import type { MessageStore, ListOptions, ListResponse } from './interface';
 export class MemoryStore implements MessageStore {
   private messages: FixMessage[] = [];
   private sseControllers: Set<ReadableStreamDefaultController> = new Set();
+  private nextId = 1;
 
   async add(message: FixMessage): Promise<FixMessage> {
+    // Generate ID if not provided
+    const id = message.id || this.generateId();
+
     // Ensure receivedAt is set
     const storedMessage: FixMessage = {
       ...message,
+      id,
       receivedAt: message.receivedAt || new Date().toISOString(),
     };
 
@@ -185,6 +190,13 @@ export class MemoryStore implements MessageStore {
       firstSeenAt: firstMsg.receivedAt || '',
       lastSeenAt: lastMsg.receivedAt || '',
     };
+  }
+
+  /**
+   * Generate a unique ID for a message
+   */
+  private generateId(): string {
+    return `msg_${Date.now()}_${this.nextId++}`;
   }
 
   /**

@@ -48,33 +48,33 @@ Building a production-ready FIX protocol analyzer with 4 main sections: Ingest, 
   - [x] Track firstSeenAt/lastSeenAt
 - [x] Write storage tests (`orders.test.ts`)
 
-## Phase 4: API Routes
-- [ ] Implement `/api/fix/parse` (Edge runtime)
-  - [ ] Parse-only endpoint
-  - [ ] Optional Bearer token auth
-  - [ ] Return parsed structure
-- [ ] Implement `/api/messages/ingest` (Node runtime)
-  - [ ] Accept text/plain or JSON
-  - [ ] Parse with strict parser
-  - [ ] Store message
-  - [ ] Broadcast to SSE clients
-  - [ ] Return 400 with repair suggestions on parse failure
-- [ ] Implement `/api/messages` GET (Node runtime)
-  - [ ] List messages with pagination
-  - [ ] Support orderKey filter
-- [ ] Implement `/api/orders` GET (Node runtime)
-  - [ ] Return aggregated OrderRow list
-- [ ] Implement `/api/messages/stream` GET (Node runtime)
-  - [ ] SSE endpoint
-  - [ ] NDJSON format
-  - [ ] Broadcast new messages
+## Phase 4: API Routes ✅
+- [x] Implement `/api/fix/parse` (Edge runtime)
+  - [x] Parse-only endpoint
+  - [x] Optional Bearer token auth
+  - [x] Return parsed structure
+- [x] Implement `/api/messages/ingest` (Node runtime)
+  - [x] Accept text/plain or JSON
+  - [x] Parse with strict parser
+  - [x] Store message
+  - [x] Broadcast to SSE clients
+  - [x] Return 400 with repair suggestions on parse failure
+- [x] Implement `/api/messages` GET (Node runtime)
+  - [x] List messages with pagination
+  - [x] Support orderKey filter
+- [x] Implement `/api/orders` GET (Node runtime)
+  - [x] Return aggregated OrderRow list
+- [x] Implement `/api/messages/stream` GET (Node runtime)
+  - [x] SSE endpoint
+  - [x] NDJSON format
+  - [x] Broadcast new messages
 - [ ] Implement `/api/fix/repair` POST (Node runtime, optional)
   - [ ] AI-powered repair behind ENABLE_AI_REPAIR flag
   - [ ] Provider-agnostic interface (OpenAI first)
   - [ ] Return 422 if unrepairable
-- [ ] Add CORS middleware
-- [ ] Add rate limiting
-- [ ] Write API tests (`api.messages.test.ts`, `ai.repair.test.ts`)
+- [x] Add CORS middleware
+- [x] Add rate limiting
+- [x] Write API tests (`api.messages.test.ts`, `ai.repair.test.ts`)
 
 ## Phase 5: UI Components - Section 1 (Ingest)
 - [ ] Create basic layout (`app/layout.tsx`, `app/page.tsx`)
@@ -267,9 +267,9 @@ fixparser/
 
 ## Progress Tracking
 - Total phases: 13
-- Completed: 3 (Phase 1, Phase 2, Phase 3)
+- Completed: 4 (Phase 1, Phase 2, Phase 3, Phase 4)
 - In progress: 0
-- Remaining: 10
+- Remaining: 9
 
 ## Notes
 - Focus on clean, readable code following user's test guidelines
