@@ -5,13 +5,13 @@ Building a production-ready FIX protocol analyzer with 4 main sections: Ingest, 
 
 ## Phase 1: Project Setup & Foundation
 - [x] Create PLAN.md and CLAUDE.md
-- [ ] Initialize Next.js 14 (App Router) with TypeScript
-- [ ] Configure Tailwind CSS
-- [ ] Set up shadcn/ui components
-- [ ] Configure ESLint + Prettier
-- [ ] Set up Vitest + React Testing Library
-- [ ] Create basic dark mode theme
-- [ ] Set up environment variables structure
+- [x] Initialize Next.js 14 (App Router) with TypeScript
+- [x] Configure Tailwind CSS
+- [x] Set up shadcn/ui components
+- [x] Configure ESLint + Prettier
+- [x] Set up Vitest + React Testing Library
+- [x] Create basic dark mode theme
+- [x] Set up environment variables structure
 
 ## Phase 2: Core FIX Parsing Logic
 - [ ] Implement FIX data types and interfaces (`lib/types.ts`)
