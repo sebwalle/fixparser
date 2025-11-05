@@ -24,8 +24,8 @@ export function OrdersSection({ onOrderClick, selectedOrderKey }: OrdersSectionP
         if (!response.ok) {
           throw new Error('Failed to fetch orders');
         }
-        const data = await response.json();
-        setOrders(data);
+        const result = await response.json();
+        setOrders(result.data || []);
       } catch (error) {
         toast.error('Failed to load orders');
       } finally {

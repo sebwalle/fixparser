@@ -63,7 +63,7 @@ describe('OrdersSection', () => {
   it('should fetch and display orders', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockOrders,
+      json: async () => ({ data: mockOrders }),
     });
 
     render(<OrdersSection />);
@@ -83,7 +83,7 @@ describe('OrdersSection', () => {
   it('should display empty state when no orders', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
-      json: async () => [],
+      json: async () => ({ data: [] }),
     });
 
     render(<OrdersSection />);
@@ -106,7 +106,7 @@ describe('OrdersSection', () => {
   it('should call onOrderClick when order is clicked', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockOrders,
+      json: async () => ({ data: mockOrders }),
     });
 
     const onOrderClick = vi.fn();
@@ -127,7 +127,7 @@ describe('OrdersSection', () => {
   it('should highlight selected order', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockOrders,
+      json: async () => ({ data: mockOrders }),
     });
 
     render(<OrdersSection selectedOrderKey="ORDER001" />);
@@ -143,7 +143,7 @@ describe('OrdersSection', () => {
   it('should format side correctly', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockOrders,
+      json: async () => ({ data: mockOrders }),
     });
 
     render(<OrdersSection />);
@@ -170,7 +170,7 @@ describe('OrdersSection', () => {
   it('should format status correctly', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockOrders,
+      json: async () => ({ data: mockOrders }),
     });
 
     render(<OrdersSection />);
@@ -189,7 +189,7 @@ describe('OrdersSection', () => {
   it('should call fetch on mount', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => mockOrders,
+      json: async () => ({ data: mockOrders }),
     });
 
     render(<OrdersSection />);
@@ -203,7 +203,7 @@ describe('OrdersSection', () => {
   it('should display message count', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockOrders,
+      json: async () => ({ data: mockOrders }),
     });
 
     render(<OrdersSection />);
@@ -223,7 +223,7 @@ describe('OrdersSection', () => {
   it('should display timestamps', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockOrders,
+      json: async () => ({ data: mockOrders }),
     });
 
     render(<OrdersSection />);
