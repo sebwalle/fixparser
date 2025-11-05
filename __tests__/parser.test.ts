@@ -163,6 +163,7 @@ describe('parseRelaxed', () => {
         price: '150.50',
         transType: '20250105-10:30:00',
         ordStatus: '0',
+        orderKey: 'ORDER123',
       };
 
       expect(result.summary).toEqual(wantSummary);

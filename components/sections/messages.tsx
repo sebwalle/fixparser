@@ -10,10 +10,11 @@ import type { StoredMessage } from '@/lib/types';
 
 interface MessagesSectionProps {
   onMessageClick?: (message: StoredMessage) => void;
+  onClearFilter?: () => void;
   selectedOrderKey?: string | null;
 }
 
-export function MessagesSection({ onMessageClick, selectedOrderKey }: MessagesSectionProps) {
+export function MessagesSection({ onMessageClick, onClearFilter, selectedOrderKey }: MessagesSectionProps) {
   const [messages, setMessages] = useState<StoredMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | undefined>(undefined);
@@ -120,9 +121,7 @@ export function MessagesSection({ onMessageClick, selectedOrderKey }: MessagesSe
   };
 
   const clearFilter = () => {
-    // Parent component should handle this by setting selectedOrderKey to null
-    // This is just for UI - we'll emit a special click that parent can handle
-    onMessageClick?.(null as any);
+    onClearFilter?.();
   };
 
   return (

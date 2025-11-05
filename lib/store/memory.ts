@@ -169,12 +169,32 @@ export class MemoryStore implements MessageStore {
       return undefined;
     };
 
+    // Helper to find the latest field value by searching backwards (newest to oldest)
+    const findLatestField = (tag: string): string | undefined => {
+      for (let i = sorted.length - 1; i >= 0; i--) {
+        const value = getField(sorted[i], tag);
+        if (value) return value;
+      }
+      return undefined;
+    };
+
+    // Helper to find the latest summary field value by searching backwards (newest to oldest)
+    const findLatestSummaryField = (
+      key: keyof FixMessage['summary']
+    ): string | undefined => {
+      for (let i = sorted.length - 1; i >= 0; i--) {
+        const value = sorted[i].summary[key];
+        if (value) return value as string;
+      }
+      return undefined;
+    };
+
     // Get latest values for key fields
     const orderId = getField(lastMsg, '37') || findField('37'); // OrderID - may not exist in first message
     const symbol = findSummaryField('symbol') || findField('55');
     const side = findSummaryField('side') || findField('54');
     const latestStatus =
-      lastMsg.summary.ordStatus || getField(lastMsg, '39') || '';
+      findLatestSummaryField('ordStatus') || findLatestField('39') || '';
 
     // Get original quantity from first message (New Order Single)
     const originalQty = getField(firstMsg, '38'); // OrderQty
@@ -205,6 +225,7 @@ export class MemoryStore implements MessageStore {
   clear(): void {
     this.messages = [];
     this.sseControllers.clear();
+    this.nextId = 1;
   }
 
   /**

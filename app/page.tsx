@@ -14,12 +14,11 @@ export default function Home() {
   const [selectedOrderKey, setSelectedOrderKey] = useState<string | null>(null);
 
   const handleMessageClick = (message: StoredMessage | null) => {
-    if (message === null) {
-      // Clear filter when user clicks the X on filter badge
-      setSelectedOrderKey(null);
-    } else {
-      setSelectedMessage(message);
-    }
+    setSelectedMessage(message);
+  };
+
+  const handleClearFilter = () => {
+    setSelectedOrderKey(null);
   };
 
   return (
@@ -34,6 +33,7 @@ export default function Home() {
         />
         <MessagesSection
           onMessageClick={handleMessageClick}
+          onClearFilter={handleClearFilter}
           selectedOrderKey={selectedOrderKey}
         />
         <DetailsSection selectedMessage={selectedMessage} />

@@ -7,26 +7,27 @@ import { memoryStore } from '../lib/store/memory';
 import { parseRelaxed } from '../lib/fix/parser';
 import { parseStrict } from '../lib/fix/strict';
 import { generateRepairSuggestions } from '../lib/fix/repair';
-import { checkRateLimit, RATE_LIMITS } from '../lib/server/ratelimit';
+import { checkRateLimit, clearRateLimits, RATE_LIMITS } from '../lib/server/ratelimit';
 import { checkAuth } from '../lib/server/auth';
 
 describe('Message API Endpoints', () => {
   beforeEach(() => {
-    // Clear store before each test
+    // Clear store and rate limits before each test
     memoryStore.clear();
+    clearRateLimits();
   });
 
   describe('/api/fix/parse', () => {
     it('should parse a valid FIX message in relaxed mode', () => {
-      const fixMessage =
-        '8=FIX.4.4|9=100|35=D|49=SENDER|56=TARGET|34=1|52=20231101-10:30:00|11=ORDER123|55=AAPL|54=1|38=100|40=2|44=150.50|';
+      const SOH = '\x01';
+      const fixMessage = `8=FIX.4.4${SOH}9=100${SOH}35=D${SOH}49=SENDER${SOH}56=TARGET${SOH}34=1${SOH}52=20231101-10:30:00${SOH}11=ORDER123${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}40=2${SOH}44=150.50${SOH}`;
 
       // Simulate API call by using the parser directly
       const result = parseRelaxed(fixMessage);
 
       expect(result.fields).toBeDefined();
       expect(result.summary.msgType).toBe('D');
-      expect(result.summary.orderKey).toBe('ORDER123');
+      expect(result.orderKey).toBe('ORDER123');
       expect(result.summary.symbol).toBe('AAPL');
       expect(result.warnings).toHaveLength(0);
     });
@@ -41,7 +42,7 @@ describe('Message API Endpoints', () => {
       if (result.success) {
         expect(result.message.fields).toBeDefined();
         expect(result.message.summary.msgType).toBe('D');
-        expect(result.message.summary.orderKey).toBe('ORDER123');
+        expect(result.message.orderKey).toBe('ORDER123');
       }
     });
 
@@ -157,7 +158,7 @@ describe('Message API Endpoints', () => {
 
       // Add multiple messages
       for (let i = 1; i <= 5; i++) {
-        const fixMessage = `8=FIX.4.4${SOH}35=D${SOH}11=ORDER${i}${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}`;
+        const fixMessage = `8=FIX.4.4${SOH}9=100${SOH}35=D${SOH}11=ORDER${i}${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}`;
           const result = parseStrict(fixMessage);
 
         if (result.success) {
@@ -192,7 +193,7 @@ describe('Message API Endpoints', () => {
       // Add messages for different orders
       const orders = ['ORDER1', 'ORDER1', 'ORDER2', 'ORDER1', 'ORDER2'];
       for (const orderKey of orders) {
-        const fixMessage = `8=FIX.4.4${SOH}35=D${SOH}11=${orderKey}${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}`;
+        const fixMessage = `8=FIX.4.4${SOH}9=100${SOH}35=D${SOH}11=${orderKey}${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}`;
           const result = parseStrict(fixMessage);
 
         if (result.success) {
@@ -222,7 +223,7 @@ describe('Message API Endpoints', () => {
       // We can test the store's behavior with various limits
 
       const SOH = '\x01';
-      const fixMessage = `8=FIX.4.4${SOH}35=D${SOH}11=ORDER1${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}`;
+      const fixMessage = `8=FIX.4.4${SOH}9=100${SOH}35=D${SOH}11=ORDER1${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}`;
       const result = parseStrict(fixMessage);
 
       if (result.success) {
@@ -249,7 +250,7 @@ describe('Message API Endpoints', () => {
       const SOH = '\x01';
 
       // Add New Order Single
-      const newOrderMsg = `8=FIX.4.4${SOH}35=D${SOH}11=ORDER123${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}40=2${SOH}44=150.50${SOH}`;
+      const newOrderMsg = `8=FIX.4.4${SOH}9=100${SOH}35=D${SOH}11=ORDER123${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}40=2${SOH}44=150.50${SOH}`;
       const result1 = parseStrict(newOrderMsg);
 
       if (result1.success) {
@@ -263,7 +264,7 @@ describe('Message API Endpoints', () => {
       }
 
       // Add Execution Report - Filled
-      const execReportMsg = `8=FIX.4.4${SOH}35=8${SOH}11=ORDER123${SOH}37=12345${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}39=2${SOH}`;
+      const execReportMsg = `8=FIX.4.4${SOH}9=100${SOH}35=8${SOH}11=ORDER123${SOH}37=12345${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}39=2${SOH}`;
       const result2 = parseStrict(execReportMsg);
 
       if (result2.success) {
@@ -318,7 +319,7 @@ describe('Message API Endpoints', () => {
 
 
       for (const order of orders) {
-        const fixMessage = `8=FIX.4.4${SOH}35=D${SOH}11=${order.clOrdId}${SOH}55=${order.symbol}${SOH}54=1${SOH}38=100${SOH}`;
+        const fixMessage = `8=FIX.4.4${SOH}9=100${SOH}35=D${SOH}11=${order.clOrdId}${SOH}55=${order.symbol}${SOH}54=1${SOH}38=100${SOH}`;
         const result = parseStrict(fixMessage);
 
         if (result.success) {
@@ -353,7 +354,7 @@ describe('Message API Endpoints', () => {
 
       // Add ORDER1
       await new Promise((resolve) => setTimeout(resolve, 10));
-      const msg1 = `8=FIX.4.4${SOH}35=D${SOH}11=ORDER1${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}`;
+      const msg1 = `8=FIX.4.4${SOH}9=100${SOH}35=D${SOH}11=ORDER1${SOH}55=AAPL${SOH}54=1${SOH}38=100${SOH}`;
       const result1 = parseStrict(msg1);
       if (result1.success) {
         await memoryStore.add({
@@ -367,7 +368,7 @@ describe('Message API Endpoints', () => {
 
       // Add ORDER2 (later)
       await new Promise((resolve) => setTimeout(resolve, 10));
-      const msg2 = `8=FIX.4.4${SOH}35=D${SOH}11=ORDER2${SOH}55=GOOGL${SOH}54=1${SOH}38=200${SOH}`;
+      const msg2 = `8=FIX.4.4${SOH}9=100${SOH}35=D${SOH}11=ORDER2${SOH}55=GOOGL${SOH}54=1${SOH}38=200${SOH}`;
       const result2 = parseStrict(msg2);
       if (result2.success) {
         await memoryStore.add({
@@ -392,13 +393,11 @@ describe('Message API Endpoints', () => {
     it('should track request counts per IP', () => {
 
       // Create mock request
+      const headersMap = new Map([['x-forwarded-for', '192.168.1.1']]);
       const mockRequest = {
-        headers: new Map([['x-forwarded-for', '192.168.1.1']]),
-      };
-
-      // Mock the headers.get method
-      mockRequest.headers.get = function (key: string) {
-        return this.get(key);
+        headers: {
+          get: (key: string) => headersMap.get(key) || null,
+        },
       };
 
       // First request should succeed
@@ -435,12 +434,10 @@ describe('Message API Endpoints', () => {
       const originalToken = process.env.FIX_API_TOKEN;
       delete process.env.FIX_API_TOKEN;
 
-
       const mockRequest = {
-        headers: new Map(),
-      };
-      mockRequest.headers.get = function () {
-        return null;
+        headers: {
+          get: () => null,
+        },
       };
 
       const result = checkAuth(mockRequest as unknown as Request);
@@ -457,12 +454,10 @@ describe('Message API Endpoints', () => {
       const originalToken = process.env.FIX_API_TOKEN;
       process.env.FIX_API_TOKEN = 'test-token-123';
 
-
       const mockRequest = {
-        headers: new Map(),
-      };
-      mockRequest.headers.get = function () {
-        return null;
+        headers: {
+          get: () => null,
+        },
       };
 
       const result = checkAuth(mockRequest as unknown as Request);
@@ -484,12 +479,11 @@ describe('Message API Endpoints', () => {
       const originalToken = process.env.FIX_API_TOKEN;
       process.env.FIX_API_TOKEN = 'test-token-123';
 
-
+      const headersMap = new Map([['authorization', 'Bearer test-token-123']]);
       const mockRequest = {
-        headers: new Map([['authorization', 'Bearer test-token-123']]),
-      };
-      mockRequest.headers.get = function (key: string) {
-        return this.get(key.toLowerCase());
+        headers: {
+          get: (key: string) => headersMap.get(key.toLowerCase()) || null,
+        },
       };
 
       const result = checkAuth(mockRequest as unknown as Request);

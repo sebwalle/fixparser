@@ -107,6 +107,13 @@ export function cleanupExpiredRecords(): void {
   }
 }
 
+/**
+ * Clear all rate limit records (useful for testing)
+ */
+export function clearRateLimits(): void {
+  rateLimitStore.clear();
+}
+
 // Clean up every 10 minutes
 if (typeof setInterval !== 'undefined') {
   setInterval(cleanupExpiredRecords, 10 * 60 * 1000);
