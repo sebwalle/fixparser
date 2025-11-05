@@ -76,19 +76,19 @@ Building a production-ready FIX protocol analyzer with 4 main sections: Ingest, 
 - [x] Add rate limiting
 - [x] Write API tests (`api.messages.test.ts`, `ai.repair.test.ts`)
 
-## Phase 5: UI Components - Section 1 (Ingest)
-- [ ] Create basic layout (`app/layout.tsx`, `app/page.tsx`)
-- [ ] Create Header component
-- [ ] Create Hero component
-- [ ] Create Ingest section component
-  - [ ] Textarea for pasting FIX messages
-  - [ ] File upload (.txt)
-  - [ ] Buttons: Strict Parse, Relaxed Parse, Clear, Use Sample
-  - [ ] Form to POST to /api/messages/ingest
-  - [ ] Live feed of POSTed messages
-  - [ ] SSE subscription (fallback to polling)
-  - [ ] Message row click handler
-- [ ] Create sample FIX messages
+## Phase 5: UI Components - Section 1 (Ingest) ✅
+- [x] Create basic layout (`app/layout.tsx`, `app/page.tsx`)
+- [x] Create Header component
+- [x] Create Hero component
+- [x] Create Ingest section component
+  - [x] Textarea for pasting FIX messages
+  - [x] File upload (.txt)
+  - [x] Buttons: Strict Parse, Relaxed Parse, Clear, Use Sample
+  - [x] Form to POST to /api/messages/ingest
+  - [x] Live feed of POSTed messages
+  - [x] SSE subscription (fallback to polling)
+  - [x] Message row click handler
+- [x] Create sample FIX messages
 
 ## Phase 6: UI Components - Section 2 (Orders)
 - [ ] Create Orders section component
@@ -267,9 +267,9 @@ fixparser/
 
 ## Progress Tracking
 - Total phases: 13
-- Completed: 4 (Phase 1, Phase 2, Phase 3, Phase 4)
+- Completed: 5 (Phase 1, Phase 2, Phase 3, Phase 4, Phase 5)
 - In progress: 0
-- Remaining: 9
+- Remaining: 8
 
 ## Notes
 - Focus on clean, readable code following user's test guidelines
