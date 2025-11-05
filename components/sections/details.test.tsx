@@ -239,6 +239,21 @@ describe('DetailsSection', () => {
       // Name column should now have the indicator
       expect(nameHeader?.textContent).toContain('↑');
     });
+
+    it('should remove sort when header clicked three times', () => {
+      render(<DetailsSection selectedMessage={mockMessage} />);
+
+      const tagHeader = screen.getByText('Tag').closest('th');
+      if (tagHeader) {
+        fireEvent.click(tagHeader); // First click - ascending
+        fireEvent.click(tagHeader); // Second click - descending
+        fireEvent.click(tagHeader); // Third click - remove sort
+      }
+
+      // Sort indicator should be gone
+      expect(tagHeader?.textContent).not.toContain('↑');
+      expect(tagHeader?.textContent).not.toContain('↓');
+    });
   });
 
   describe('Action Buttons', () => {

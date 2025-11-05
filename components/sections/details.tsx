@@ -30,8 +30,14 @@ export function DetailsSection({ selectedMessage }: DetailsSectionProps) {
 
   const handleSort = (column: 'tag' | 'name') => {
     if (sortColumn === column) {
-      // Toggle direction
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      if (sortDirection === 'asc') {
+        // Second click: toggle to descending
+        setSortDirection('desc');
+      } else {
+        // Third click: remove sort
+        setSortColumn(null);
+        setSortDirection('asc');
+      }
     } else {
       // New column - default to ascending
       setSortColumn(column);
