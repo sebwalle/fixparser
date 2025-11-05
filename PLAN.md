@@ -13,24 +13,24 @@ Building a production-ready FIX protocol analyzer with 4 main sections: Ingest, 
 - [x] Create basic dark mode theme
 - [x] Set up environment variables structure
 
-## Phase 2: Core FIX Parsing Logic
-- [ ] Implement FIX data types and interfaces (`lib/types.ts`)
-- [ ] Create FIX tag dictionary (minimal set from PRD)
-- [ ] Implement relaxed parser (accepts |, ^, or SOH)
-  - [ ] Normalize delimiters to SOH internally
-  - [ ] Build fields array
-  - [ ] Extract summary fields
-  - [ ] Generate warnings
-  - [ ] Calculate orderKey
-- [ ] Implement strict parser
-  - [ ] Validate SOH delimiters
-  - [ ] Validate tag=value format
-  - [ ] Return structured issues
-- [ ] Implement repair suggestion logic
-  - [ ] Delimiter normalization
-  - [ ] Whitespace cleanup
-  - [ ] Missing equals after numeric tags
-- [ ] Write parser tests (`strict.test.ts`, `parser.test.ts`, `repair.test.ts`)
+## Phase 2: Core FIX Parsing Logic ✅
+- [x] Implement FIX data types and interfaces (`lib/types.ts`)
+- [x] Create FIX tag dictionary (minimal set from PRD)
+- [x] Implement relaxed parser (accepts |, ^, or SOH)
+  - [x] Normalize delimiters to SOH internally
+  - [x] Build fields array
+  - [x] Extract summary fields
+  - [x] Generate warnings
+  - [x] Calculate orderKey
+- [x] Implement strict parser
+  - [x] Validate SOH delimiters
+  - [x] Validate tag=value format
+  - [x] Return structured issues
+- [x] Implement repair suggestion logic
+  - [x] Delimiter normalization
+  - [x] Whitespace cleanup
+  - [x] Missing equals after numeric tags
+- [x] Write parser tests (`strict.test.ts`, `parser.test.ts`, `repair.test.ts`)
 
 ## Phase 3: Storage & Backend Infrastructure
 - [ ] Create MessageStore interface
@@ -267,9 +267,9 @@ fixparser/
 
 ## Progress Tracking
 - Total phases: 13
-- Completed: 0
-- In progress: 1 (Phase 1)
-- Remaining: 12
+- Completed: 2 (Phase 1, Phase 2)
+- In progress: 0
+- Remaining: 11
 
 ## Notes
 - Focus on clean, readable code following user's test guidelines
