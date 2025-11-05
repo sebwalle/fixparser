@@ -52,7 +52,7 @@ export function IngestSection({ onMessageClick }: IngestSectionProps) {
         setMessages((prev) => [message, ...prev].slice(0, 50)); // Keep last 50
         toast.success('New message received');
       } catch (error) {
-        console.error('Failed to parse SSE message:', error);
+        // Skip invalid SSE messages
       }
     };
 
@@ -106,7 +106,6 @@ export function IngestSection({ onMessageClick }: IngestSectionProps) {
       }
     } catch (error) {
       toast.error('Failed to submit message');
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }

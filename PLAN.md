@@ -90,32 +90,32 @@ Building a production-ready FIX protocol analyzer with 4 main sections: Ingest, 
   - [x] Message row click handler
 - [x] Create sample FIX messages
 
-## Phase 6: UI Components - Section 2 (Orders)
-- [ ] Create Orders section component
-  - [ ] Fetch from `/api/orders`
-  - [ ] Table/cards displaying OrderRow data
-  - [ ] Show: ClOrdID, OrderID, Symbol, Side, OriginalQty, Status, Count, First/Last Seen
-  - [ ] Click handler to filter Messages section
-  - [ ] Highlight selected order
-  - [ ] Scroll Messages section into view on selection
+## Phase 6: UI Components - Section 2 (Orders) ✅
+- [x] Create Orders section component
+  - [x] Fetch from `/api/orders`
+  - [x] Table/cards displaying OrderRow data
+  - [x] Show: ClOrdID, OrderID, Symbol, Side, OriginalQty, Status, Count, First/Last Seen
+  - [x] Click handler to filter Messages section
+  - [x] Highlight selected order
+  - [x] Scroll Messages section into view on selection
 
-## Phase 7: UI Components - Section 3 (Messages)
-- [ ] Create Messages section component
-  - [ ] Fetch from `/api/messages`
-  - [ ] Paginated table with key fields
-  - [ ] Show: receivedAt, MsgType, TransType, OrdStatus, ClOrdID, OrderID, Symbol, Side, Qty, Price
-  - [ ] Support filtering by orderKey
-  - [ ] Breadcrumb/chip for active filter
-  - [ ] Click handler to select message and update Details
-  - [ ] Pagination controls
+## Phase 7: UI Components - Section 3 (Messages) ✅
+- [x] Create Messages section component
+  - [x] Fetch from `/api/messages`
+  - [x] Paginated table with key fields
+  - [x] Show: receivedAt, MsgType, TransType, OrdStatus, ClOrdID, OrderID, Symbol, Side, Qty, Price
+  - [x] Support filtering by orderKey
+  - [x] Breadcrumb/chip for active filter
+  - [x] Click handler to select message and update Details
+  - [x] Pagination controls
 
-## Phase 8: UI Components - Section 4 (Details)
-- [ ] Create Details section component
-  - [ ] Compact summary header (MsgType badge, status, key fields)
-  - [ ] Sortable tag/name/value table
-  - [ ] Client-side sorting by tag or name
-  - [ ] Buttons: Copy JSON, Export JSON, Copy Raw
-  - [ ] Update when selection changes
+## Phase 8: UI Components - Section 4 (Details) ✅
+- [x] Create Details section component
+  - [x] Compact summary header (MsgType badge, status, key fields)
+  - [x] Sortable tag/name/value table
+  - [x] Client-side sorting by tag or name
+  - [x] Buttons: Copy JSON, Export JSON, Copy Raw
+  - [x] Update when selection changes
 
 ## Phase 9: Component Integration & State Management
 - [ ] Create global state for:
@@ -267,9 +267,9 @@ fixparser/
 
 ## Progress Tracking
 - Total phases: 13
-- Completed: 5 (Phase 1, Phase 2, Phase 3, Phase 4, Phase 5)
+- Completed: 8 (Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, Phase 6, Phase 7, Phase 8)
 - In progress: 0
-- Remaining: 8
+- Remaining: 5
 
 ## Notes
 - Focus on clean, readable code following user's test guidelines
