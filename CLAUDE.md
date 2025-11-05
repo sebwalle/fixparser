@@ -90,8 +90,8 @@ Always wrap the component so that we can change actual implementation easily.
 1. **Readability is paramount** - don't over-complicate
 2. **Use maps for value checking** instead of multiple variables
 3. **Use table-based tests** where applicable
-4. **Use `require` instead of `assert`** when missed assertion makes rest of test obsolete
-5. **Prefer clear test names** that describe the scenario
+4. **Prefer clear test names** that describe the scenario
+5. **Test ALL functionality**. Make good tests for all functionality we build. Aim for 100% coverage of functionality (not implementation details).
 
 Example test pattern:
 ```typescript
