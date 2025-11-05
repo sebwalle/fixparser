@@ -12,15 +12,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/liminaab/fixparser.git"
+    "url": "git+https://github.com/sebwalle/fixparser.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/liminaab/fixparser/issues"
+    "url": "https://github.com/sebwalle/fixparser/issues"
   },
-  "homepage": "https://github.com/liminaab/fixparser#readme",
+  "homepage": "https://github.com/sebwalle/fixparser#readme",
   "description": "",
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
