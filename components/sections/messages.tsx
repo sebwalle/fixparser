@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import type { FixMessage } from '@/lib/types';
 
@@ -17,19 +15,13 @@ interface MessagesSectionProps {
 export function MessagesSection({ onMessageClick, onClearFilter, selectedOrderKey }: MessagesSectionProps) {
   const [messages, setMessages] = useState<FixMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [nextCursor, setNextCursor] = useState<string | undefined>(undefined);
-  const [prevCursors, setPrevCursors] = useState<string[]>([]);
-  const [hasMore, setHasMore] = useState(false);
 
   // Fetch messages from API
-  const fetchMessages = useCallback(async (cursor?: string) => {
+  const fetchMessages = useCallback(async () => {
     try {
       setIsLoading(true);
       const params = new URLSearchParams();
-      params.set('limit', '50');
-      if (cursor) {
-        params.set('cursor', cursor);
-      }
+      params.set('limit', '100');
       if (selectedOrderKey) {
         params.set('orderKey', selectedOrderKey);
       }
@@ -41,8 +33,6 @@ export function MessagesSection({ onMessageClick, onClearFilter, selectedOrderKe
 
       const result = await response.json();
       setMessages(result.data);
-      setNextCursor(result.meta.nextCursor);
-      setHasMore(!!result.meta.nextCursor);
     } catch (error) {
       toast.error('Failed to load messages');
     } finally {
@@ -52,41 +42,15 @@ export function MessagesSection({ onMessageClick, onClearFilter, selectedOrderKe
 
   // Initial fetch and refetch when selectedOrderKey changes
   useEffect(() => {
-    setPrevCursors([]);
-    setNextCursor(undefined);
     fetchMessages();
 
-    // Poll for updates every 5 seconds (only if not filtering)
-    if (!selectedOrderKey) {
-      const interval = setInterval(() => fetchMessages(), 5000);
-      return () => clearInterval(interval);
-    }
-  }, [selectedOrderKey, fetchMessages]);
-
-  const handleNext = () => {
-    if (nextCursor) {
-      setPrevCursors((prev) => [...prev, nextCursor]);
-      fetchMessages(nextCursor);
-    }
-  };
-
-  const handlePrev = () => {
-    if (prevCursors.length > 0) {
-      const newPrevCursors = [...prevCursors];
-      const prevCursor = newPrevCursors.pop();
-      setPrevCursors(newPrevCursors);
-      fetchMessages(prevCursor);
-    }
-  };
+    // Poll for updates every 5 seconds
+    const interval = setInterval(() => fetchMessages(), 5000);
+    return () => clearInterval(interval);
+  }, [fetchMessages]);
 
   const handleMessageClick = (message: FixMessage) => {
     onMessageClick?.(message);
-
-    // Scroll to Details section
-    const detailsSection = document.querySelector('[data-section="details"]');
-    if (detailsSection) {
-      detailsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
   };
 
   const formatMsgType = (msgType?: string): string => {
@@ -100,10 +64,6 @@ export function MessagesSection({ onMessageClick, onClearFilter, selectedOrderKe
     return msgType ? msgTypeMap[msgType] || msgType : 'N/A';
   };
 
-  const formatSide = (side?: string): string => {
-    return side === '1' ? 'BUY' : side === '2' ? 'SELL' : side || 'N/A';
-  };
-
   const formatStatus = (status?: string): string => {
     const statusMap: Record<string, string> = {
       '0': 'New',
@@ -115,147 +75,101 @@ export function MessagesSection({ onMessageClick, onClearFilter, selectedOrderKe
     return status ? statusMap[status] || status : 'N/A';
   };
 
-  const clearFilter = () => {
-    onClearFilter?.();
+  const extractSession = (message: FixMessage): { from: string; to: string } | null => {
+    return {
+      from: 'MAP_BLP_PROD',
+      to: 'MAP_CARL_PROD'
+    };
   };
 
   return (
-    <section className="w-full py-8" data-section="messages">
-      <div className="container">
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle>3. Messages</CardTitle>
-                <CardDescription>
-                  All FIX messages in chronological order. Click a message to see details.
-                </CardDescription>
-              </div>
-              {selectedOrderKey && (
-                <Badge variant="secondary" className="font-mono">
-                  Filtered by: {selectedOrderKey}
-                  <button
-                    onClick={clearFilter}
-                    className="ml-2 hover:text-destructive"
-                    aria-label="Clear filter"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isLoading && messages.length === 0 ? (
-              <div className="flex items-center justify-center py-8">
-                <p className="text-sm text-muted-foreground">Loading messages...</p>
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="flex items-center justify-center py-8">
-                <p className="text-sm text-muted-foreground">
-                  {selectedOrderKey
-                    ? 'No messages found for this order.'
-                    : 'No messages yet. Submit messages to see them here.'}
-                </p>
-              </div>
-            ) : (
-              <>
-                <ScrollArea className="h-[500px]">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="border-b">
-                        <tr>
-                          <th className="text-left p-2 font-medium">Received At</th>
-                          <th className="text-left p-2 font-medium">MsgType</th>
-                          <th className="text-left p-2 font-medium">TransType</th>
-                          <th className="text-left p-2 font-medium">OrdStatus</th>
-                          <th className="text-left p-2 font-medium">ClOrdID</th>
-                          <th className="text-left p-2 font-medium">OrderID</th>
-                          <th className="text-left p-2 font-medium">Symbol</th>
-                          <th className="text-left p-2 font-medium">Side</th>
-                          <th className="text-left p-2 font-medium">Qty</th>
-                          <th className="text-left p-2 font-medium">Price</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {messages.map((message, index) => (
-                          <tr
-                            key={message.id}
-                            className={`border-b cursor-pointer hover:bg-accent transition-colors ${
-                              index % 2 === 1 ? 'bg-muted/30' : ''
-                            }`}
-                            onClick={() => handleMessageClick(message)}
-                          >
-                            <td className="p-2 text-xs text-muted-foreground whitespace-nowrap">
-                              {message.receivedAt ? new Date(message.receivedAt).toLocaleString() : '-'}
-                            </td>
-                            <td className="p-2">
-                              <Badge variant="outline" className="text-xs">
-                                {formatMsgType(message.summary.msgType)}
-                              </Badge>
-                            </td>
-                            <td className="p-2 font-mono text-xs">
-                              {message.summary.transType || '-'}
-                            </td>
-                            <td className="p-2">
-                              {message.summary.ordStatus ? (
-                                <Badge variant="secondary" className="text-xs">
-                                  {formatStatus(message.summary.ordStatus)}
-                                </Badge>
-                              ) : (
-                                '-'
-                              )}
-                            </td>
-                            <td className="p-2 font-mono text-xs">
-                              {message.summary.clOrdId || '-'}
-                            </td>
-                            <td className="p-2 font-mono text-xs">
-                              {message.summary.orderId || '-'}
-                            </td>
-                            <td className="p-2 font-semibold">
-                              {message.summary.symbol || '-'}
-                            </td>
-                            <td className="p-2">{formatSide(message.summary.side)}</td>
-                            <td className="p-2 text-right">
-                              {message.summary.qty || '-'}
-                            </td>
-                            <td className="p-2 text-right">
-                              {message.summary.price || '-'}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </ScrollArea>
-
-                {/* Pagination controls */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePrev}
-                    disabled={prevCursors.length === 0}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    {messages.length} messages
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleNext}
-                    disabled={!hasMore}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+    <div className="bg-card rounded-lg border">
+      <div className="p-4 border-b flex items-center justify-between">
+        <input
+          type="text"
+          placeholder="Search messages..."
+          className="flex-1 bg-muted/30 border-0 outline-none px-3 py-2 rounded-md text-sm"
+        />
       </div>
-    </section>
+
+      {isLoading && messages.length === 0 ? (
+        <div className="flex items-center justify-center py-8">
+          <p className="text-sm text-muted-foreground">Loading messages...</p>
+        </div>
+      ) : messages.length === 0 ? (
+        <div className="flex items-center justify-center py-8 px-4">
+          <p className="text-sm text-muted-foreground text-center">
+            {selectedOrderKey
+              ? 'No messages found for this order.'
+              : 'No messages yet. Submit messages to see them here.'}
+          </p>
+        </div>
+      ) : (
+        <ScrollArea className="h-[calc(100vh-28rem)]">
+          <div className="p-2 space-y-2">
+            {messages.map((message) => {
+              const session = extractSession(message);
+              const summary = message.summary;
+
+              return (
+                <div
+                  key={message.id}
+                  className="p-3 rounded-md bg-cyan-500/10 border border-cyan-500/20 cursor-pointer hover:bg-cyan-500/20 transition-all"
+                  onClick={() => handleMessageClick(message)}
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="default" className="text-xs bg-cyan-500">
+                        8
+                      </Badge>
+                      <span className="text-xs font-semibold">{formatMsgType(summary.msgType)}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {message.receivedAt ? new Date(message.receivedAt).toLocaleTimeString() : '-'}
+                    </Badge>
+                  </div>
+
+                  {/* Session Flow */}
+                  {session && (
+                    <div className="flex items-center gap-2 mb-2 text-xs">
+                      <span className="text-cyan-400 font-mono">{session.from}</span>
+                      <span className="text-muted-foreground">→</span>
+                      <span className="text-cyan-400 font-mono">{session.to}</span>
+                    </div>
+                  )}
+
+                  {/* Details */}
+                  <div className="flex items-center gap-4 text-xs">
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground">Seq:</span>
+                      <span className="font-mono">{summary.transType || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground">FIX</span>
+                      <span className="font-mono">4.4</span>
+                    </div>
+                  </div>
+
+                  {/* Status Badges */}
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {formatStatus(summary.ordStatus)}
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      Trade
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      )}
+    </div>
   );
 }

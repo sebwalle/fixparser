@@ -1,19 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { toast } from 'sonner';
 import type { FixMessage } from '@/lib/types';
 import { getFieldValueDescription } from '@/lib/fix/dictionary';
 
@@ -21,99 +11,25 @@ interface DetailsSectionProps {
   selectedMessage: FixMessage | null;
 }
 
-type SortColumn = 'tag' | 'name' | null;
-type SortDirection = 'asc' | 'desc';
-
 export function DetailsSection({ selectedMessage }: DetailsSectionProps) {
-  const [sortColumn, setSortColumn] = useState<SortColumn>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [activeTab, setActiveTab] = useState('overview');
 
-  const handleSort = (column: 'tag' | 'name') => {
-    if (sortColumn === column) {
-      if (sortDirection === 'asc') {
-        // Second click: toggle to descending
-        setSortDirection('desc');
-      } else {
-        // Third click: remove sort
-        setSortColumn(null);
-        setSortDirection('asc');
-      }
-    } else {
-      // New column - default to ascending
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
+  if (!selectedMessage) {
+    return (
+      <div className="h-full bg-card rounded-lg border flex items-center justify-center">
+        <p className="text-sm text-muted-foreground text-center px-4">
+          Select a message to view details
+        </p>
+      </div>
+    );
+  }
 
-  const getSortedFields = () => {
-    if (!selectedMessage) return [];
-
-    const fields = [...selectedMessage.fields];
-
-    if (!sortColumn) return fields;
-
-    return fields.sort((a, b) => {
-      let compareResult = 0;
-
-      if (sortColumn === 'tag') {
-        // Numeric sort for tags
-        compareResult = parseInt(a.tag, 10) - parseInt(b.tag, 10);
-      } else if (sortColumn === 'name') {
-        // Alphabetical sort for names
-        compareResult = a.name.localeCompare(b.name);
-      }
-
-      return sortDirection === 'asc' ? compareResult : -compareResult;
-    });
-  };
-
-  const handleCopyJSON = async () => {
-    if (!selectedMessage) return;
-
-    try {
-      const json = JSON.stringify(selectedMessage, null, 2);
-      await navigator.clipboard.writeText(json);
-      toast.success('JSON copied to clipboard');
-    } catch (error) {
-      toast.error('Failed to copy JSON');
-    }
-  };
-
-  const handleExportJSON = () => {
-    if (!selectedMessage) return;
-
-    try {
-      const json = JSON.stringify(selectedMessage, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `fix-message-${selectedMessage.id}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success('JSON exported');
-    } catch (error) {
-      toast.error('Failed to export JSON');
-    }
-  };
-
-  const handleCopyRaw = async () => {
-    if (!selectedMessage) return;
-
-    try {
-      await navigator.clipboard.writeText(selectedMessage.rawMessage);
-      toast.success('Raw message copied to clipboard');
-    } catch (error) {
-      toast.error('Failed to copy raw message');
-    }
-  };
+  const summary = selectedMessage.summary;
 
   const formatMsgType = (msgType?: string): string => {
     const msgTypeMap: Record<string, string> = {
       'D': 'NewOrder',
-      '8': 'ExecReport',
+      '8': 'ExecutionReport',
       'F': 'CancelReq',
       '9': 'CancelRej',
       'G': 'ReplaceReq',
@@ -121,156 +37,152 @@ export function DetailsSection({ selectedMessage }: DetailsSectionProps) {
     return msgType ? msgTypeMap[msgType] || msgType : 'N/A';
   };
 
-  const formatStatus = (status?: string): string => {
-    const statusMap: Record<string, string> = {
-      '0': 'New',
-      '1': 'Partial',
-      '2': 'Filled',
-      '4': 'Canceled',
-      '8': 'Rejected',
-    };
-    return status ? statusMap[status] || status : 'N/A';
-  };
-
-  if (!selectedMessage) {
-    return (
-      <section className="w-full py-8" data-section="details">
-        <div className="container">
-          <Card>
-            <CardHeader>
-              <CardTitle>4. Details</CardTitle>
-              <CardDescription>
-                Select a message to view its full details and fields.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-center py-12">
-                <p className="text-sm text-muted-foreground">
-                  No message selected. Click a message in the Messages section to view details.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-    );
-  }
-
-  const sortedFields = getSortedFields();
-  const summary = selectedMessage.summary;
 
   return (
-    <section className="w-full py-8" data-section="details">
-      <div className="container">
-        <Card>
-          <CardHeader>
-            <CardTitle>4. Details</CardTitle>
-            <CardDescription>
-              Full field breakdown and actions for the selected message.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Compact Summary Header */}
-            <div className="flex items-center justify-between mb-4 p-4 border rounded-lg bg-muted/50">
-              <div className="flex items-center gap-4">
-                <Badge variant="default" className="text-sm">
-                  {formatMsgType(summary.msgType)}
-                </Badge>
-                {summary.ordStatus && (
-                  <Badge variant="secondary" className="text-sm">
-                    {formatStatus(summary.ordStatus)}
-                  </Badge>
-                )}
-                {summary.symbol && (
-                  <span className="font-semibold text-sm">{summary.symbol}</span>
-                )}
-                {summary.clOrdId && (
-                  <span className="font-mono text-xs text-muted-foreground">
-                    ClOrdID: {summary.clOrdId}
-                  </span>
-                )}
-                {summary.orderId && (
-                  <span className="font-mono text-xs text-muted-foreground">
-                    OrderID: {summary.orderId}
-                  </span>
-                )}
+    <div className="h-full bg-card rounded-lg border flex flex-col">
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+        <TabsList className="grid w-full grid-cols-4 rounded-none border-b">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="fields">Fields</TabsTrigger>
+          <TabsTrigger value="raw">Raw</TabsTrigger>
+          <TabsTrigger value="validation">Validation</TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="flex-1 overflow-auto p-4 space-y-6">
+          {/* Message Summary */}
+          <div>
+            <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Message Summary</h3>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Type:</div>
+                <div className="font-semibold">{formatMsgType(summary.msgType)} (8)</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Version:</div>
+                <div className="font-mono">FIX.4.4</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Sequence:</div>
+                <div className="font-mono">952</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Time:</div>
+                <div className="font-mono text-xs">
+                  {selectedMessage.receivedAt
+                    ? new Date(selectedMessage.receivedAt).toLocaleString()
+                    : 'N/A'}
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-2 mb-4">
-              <Button variant="outline" size="sm" onClick={handleCopyJSON}>
-                Copy JSON
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleExportJSON}>
-                Export JSON
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleCopyRaw}>
-                Copy Raw
-              </Button>
+          {/* Session */}
+          <div>
+            <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Session</h3>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="px-3 py-1">MAP_BLP_PROD</Badge>
+              <span className="text-muted-foreground">→</span>
+              <Badge variant="outline" className="px-3 py-1">MAP_CARL_PROD</Badge>
             </div>
+          </div>
 
-            {/* Sortable Table */}
-            <ScrollArea className="h-[500px] rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead
-                      className="cursor-pointer hover:bg-accent px-2"
-                      onClick={() => handleSort('tag')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Tag
-                        {sortColumn === 'tag' && (
-                          <span className="text-xs">
-                            {sortDirection === 'asc' ? '↑' : '↓'}
-                          </span>
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-accent px-2"
-                      onClick={() => handleSort('name')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Name
-                        {sortColumn === 'name' && (
-                          <span className="text-xs">
-                            {sortDirection === 'asc' ? '↑' : '↓'}
-                          </span>
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead className="px-2">Value</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedFields.map((field, index) => {
-                    const isEven = index % 2 === 1;
-                    return (
-                      <TableRow 
-                        key={`${field.tag}-${index}`}
-                        style={isEven ? { backgroundColor: 'hsl(var(--muted) / 0.5)' } : undefined}
-                      >
-                        <TableCell className="font-mono text-xs px-2 py-1">{field.tag}</TableCell>
-                        <TableCell className="font-medium px-2 py-1">{field.name}</TableCell>
-                        <TableCell className="font-mono text-sm px-2 py-1">
-                          {getFieldValueDescription(field.tag, field.value)}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-
-            {/* Field count */}
-            <div className="mt-4 text-sm text-muted-foreground">
-              {sortedFields.length} fields
+          {/* Key Business Fields */}
+          <div>
+            <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Key Business Fields</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">ClOrdID:</span>
+                <span className="font-mono">{summary.clOrdId || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">OrderID:</span>
+                <span className="font-mono">{summary.orderId || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">OrderQty:</span>
+                <span className="font-mono">{summary.qty || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">OrdType:</span>
+                <span className="font-mono">1</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">Side:</span>
+                <span className="font-mono">{summary.side === '1' ? 'Buy' : summary.side === '2' ? 'Sell' : 'N/A'}</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-muted-foreground">Symbol:</span>
+                <span className="font-mono">{summary.symbol || 'N/A'}</span>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </section>
+          </div>
+        </TabsContent>
+
+        {/* Fields Tab */}
+        <TabsContent value="fields" className="flex-1 overflow-auto p-0">
+          <ScrollArea className="h-full">
+            <div className="p-4">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-card border-b">
+                  <tr>
+                    <th className="text-left p-2 font-medium text-muted-foreground">Tag</th>
+                    <th className="text-left p-2 font-medium text-muted-foreground">Name</th>
+                    <th className="text-left p-2 font-medium text-muted-foreground">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedMessage.fields.map((field, index) => (
+                    <tr
+                      key={`${field.tag}-${index}`}
+                      className="border-b hover:bg-muted/50"
+                    >
+                      <td className="p-2 font-mono text-xs">{field.tag}</td>
+                      <td className="p-2 text-xs">{field.name}</td>
+                      <td className="p-2 font-mono text-xs">
+                        {getFieldValueDescription(field.tag, field.value)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </ScrollArea>
+        </TabsContent>
+
+        {/* Raw Tab */}
+        <TabsContent value="raw" className="flex-1 overflow-auto p-4">
+          <div className="bg-muted/30 rounded-md p-4 font-mono text-xs whitespace-pre-wrap break-all">
+            {selectedMessage.rawMessage}
+          </div>
+        </TabsContent>
+
+        {/* Validation Tab */}
+        <TabsContent value="validation" className="flex-1 overflow-auto p-4">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <span className="text-sm font-semibold">Message is valid</span>
+            </div>
+            {selectedMessage.warnings && selectedMessage.warnings.length > 0 ? (
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-muted-foreground">Warnings:</h4>
+                {selectedMessage.warnings.map((warning, index) => (
+                  <div key={index} className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md text-sm">
+                    {warning}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No validation warnings</p>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

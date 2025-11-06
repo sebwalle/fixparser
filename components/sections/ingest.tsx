@@ -1,12 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { getAllSamples } from '@/lib/fix/samples';
 import { toast } from 'sonner';
 import type { FixMessage } from '@/lib/types';
@@ -17,47 +13,11 @@ interface IngestSectionProps {
 
 export function IngestSection({ onMessageClick }: IngestSectionProps) {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<FixMessage[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedSample, setSelectedSample] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const samples = getAllSamples();
 
-  // SSE subscription for live message feed
-  useEffect(() => {
-    const eventSource = new EventSource('/api/messages/stream');
-
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-
-        // Skip connection messages
-        if (data.type === 'connected') {
-          return;
-        }
-
-        // Use the FixMessage directly
-        const message: FixMessage = data;
-
-        setMessages((prev) => [message, ...prev].slice(0, 50)); // Keep last 50
-        toast.success('New message received');
-      } catch (error) {
-        // Skip invalid SSE messages
-      }
-    };
-
-    eventSource.onerror = () => {
-      eventSource.close();
-      // Fallback to polling could be implemented here
-      toast.error('Live feed disconnected');
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, []);
-
-  const handleSubmit = async (mode: 'strict' | 'relaxed') => {
+  const handleSubmit = async () => {
     if (!input.trim()) {
       toast.error('Please enter a FIX message');
       return;
@@ -65,8 +25,7 @@ export function IngestSection({ onMessageClick }: IngestSectionProps) {
 
     setIsSubmitting(true);
     try {
-      const endpoint = mode === 'strict' ? '/api/messages/ingest' : '/api/fix/parse';
-      const response = await fetch(endpoint, {
+      const response = await fetch('/api/messages/ingest', {
         method: 'POST',
         headers: {
           'Content-Type': 'text/plain',
@@ -78,7 +37,6 @@ export function IngestSection({ onMessageClick }: IngestSectionProps) {
 
       if (!response.ok) {
         if (data.issues) {
-          // Show parse errors with suggestions
           const issueText = data.issues.map((i: any) => i.message).join(', ');
           toast.error(`Parse failed: ${issueText}`);
           if (data.suggestions) {
@@ -88,11 +46,8 @@ export function IngestSection({ onMessageClick }: IngestSectionProps) {
           toast.error(data.error || 'Failed to parse message');
         }
       } else {
-        toast.success(`Message parsed successfully (${mode} mode)`);
-        if (mode === 'strict') {
-          // Message was stored, will appear via SSE
-          setInput('');
-        }
+        toast.success('Message parsed successfully');
+        setInput('');
       }
     } catch (error) {
       toast.error('Failed to submit message');
@@ -101,168 +56,96 @@ export function IngestSection({ onMessageClick }: IngestSectionProps) {
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      setInput(text);
-      toast.success('File loaded');
-    } catch (error) {
-      toast.error('Failed to read file');
-    }
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleUseSample = () => {
-    if (!selectedSample) {
-      toast.error('Please select a sample message');
-      return;
-    }
-
-    const sample = samples.find(s => s.name === selectedSample);
-    if (sample) {
-      // Convert SOH to pipe for readability
+  const handleLoadSample = () => {
+    if (samples.length > 0) {
+      const sample = samples[0];
       const readable = sample.message.replace(/\x01/g, '|');
       setInput(readable);
       toast.success(`Loaded: ${sample.name}`);
     }
   };
 
-  const handleClear = () => {
-    setInput('');
-    setSelectedSample('');
-    toast.info('Input cleared');
+  const handleAICleanup = () => {
+    toast.info('AI Cleanup feature coming soon');
   };
 
-  const formatMessagePreview = (msg: FixMessage): string => {
-    const parts = [];
-    const summary = msg.summary;
-    if (summary.msgType) parts.push(`${summary.msgType}`);
-    if (summary.clOrdId) parts.push(`#${summary.clOrdId}`);
-    if (summary.symbol) parts.push(summary.symbol);
-    if (summary.side) parts.push(summary.side === '1' ? 'BUY' : 'SELL');
-    if (summary.qty) parts.push(`Qty:${summary.qty}`);
-    return parts.join(' | ');
+  const handleClear = () => {
+    setInput('');
   };
 
   return (
-    <section className="w-full py-8">
-      <div className="container">
-        <Card>
-          <CardHeader>
-            <CardTitle>1. Ingest Messages</CardTitle>
-            <CardDescription>
-              Paste FIX messages, upload a file, or use sample messages
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Input Area */}
-            <div className="space-y-2">
-              <Textarea
-                placeholder="Paste FIX message here (use | or ^ as delimiters for readability)..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="min-h-[150px] font-mono text-sm"
-              />
-            </div>
+    <div className="bg-card rounded-lg border">
+      <div className="p-4 space-y-3">
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button
+            onClick={handleLoadSample}
+            variant="outline"
+            size="sm"
+            className="flex-1"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Load Sample
+          </Button>
+          <Button
+            onClick={handleAICleanup}
+            variant="outline"
+            size="sm"
+            className="flex-1"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+            </svg>
+            AI Cleanup
+          </Button>
+          <Button
+            onClick={handleClear}
+            variant="ghost"
+            size="sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Clear
+          </Button>
+        </div>
 
-            {/* Sample Selection */}
-            <div className="flex gap-2 items-center">
-              <Select value={selectedSample} onValueChange={setSelectedSample}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select a sample message..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {samples.map((sample) => (
-                    <SelectItem key={sample.name} value={sample.name}>
-                      {sample.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={handleUseSample} variant="outline">
-                Use Sample
-              </Button>
-            </div>
+        {/* Text Input */}
+        <Textarea
+          placeholder="Paste FIX message here (use | or ^ as delimiters for readability)..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className="min-h-[120px] font-mono text-sm resize-none bg-muted/30"
+        />
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() => handleSubmit('strict')}
-                disabled={isSubmitting}
-              >
-                Strict Parse & Store
-              </Button>
-              <Button
-                onClick={() => handleSubmit('relaxed')}
-                disabled={isSubmitting}
-                variant="secondary"
-              >
-                Relaxed Parse (Test Only)
-              </Button>
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                variant="outline"
-              >
-                Upload File
-              </Button>
-              <Button onClick={handleClear} variant="ghost">
-                Clear
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".txt,.fix"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            </div>
+        {/* Parse Button */}
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="w-full bg-cyan-500 hover:bg-cyan-600 text-white"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+          Parse Messages
+        </Button>
 
-            {/* Live Message Feed */}
-            <div className="space-y-2 pt-4 border-t">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Live Message Feed</h3>
-                <Badge variant="outline">{messages.length} messages</Badge>
-              </div>
-              <ScrollArea className="h-[200px] rounded-md border">
-                <div className="p-4 space-y-2">
-                  {messages.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-8">
-                      No messages yet. Submit a message to see it appear here.
-                    </p>
-                  ) : (
-                    messages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className="flex items-center justify-between p-2 rounded-md border cursor-pointer hover:bg-accent transition-colors"
-                        onClick={() => onMessageClick?.(msg)}
-                      >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <Badge variant="secondary" className="shrink-0">
-                            {msg.summary.msgType || 'Unknown'}
-                          </Badge>
-                          <span className="text-sm truncate">
-                            {formatMessagePreview(msg)}
-                          </span>
-                        </div>
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          {msg.receivedAt ? new Date(msg.receivedAt).toLocaleTimeString() : '-'}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Download Icon */}
+        <div className="flex justify-end">
+          <button className="p-2 hover:bg-muted rounded-md transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </button>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

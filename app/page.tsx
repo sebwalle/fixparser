@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Header } from '@/components/header';
-import { Hero } from '@/components/hero';
 import { IngestSection } from '@/components/sections/ingest';
 import { OrdersSection } from '@/components/sections/orders';
 import { MessagesSection } from '@/components/sections/messages';
@@ -22,21 +21,33 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Header />
-      <Hero />
-      <main>
-        <IngestSection onMessageClick={setSelectedMessage} />
-        <OrdersSection
-          onOrderClick={setSelectedOrderKey}
-          selectedOrderKey={selectedOrderKey}
-        />
-        <MessagesSection
-          onMessageClick={handleMessageClick}
-          onClearFilter={handleClearFilter}
-          selectedOrderKey={selectedOrderKey}
-        />
-        <DetailsSection selectedMessage={selectedMessage} />
+      <main className="flex-1 overflow-hidden">
+        <div className="h-full grid grid-cols-12 gap-4 p-4">
+          {/* Left Column - ClOrdID Groups */}
+          <div className="col-span-3 overflow-auto">
+            <OrdersSection
+              onOrderClick={setSelectedOrderKey}
+              selectedOrderKey={selectedOrderKey}
+            />
+          </div>
+
+          {/* Middle Column - Parser Input + Messages */}
+          <div className="col-span-5 overflow-auto space-y-4">
+            <IngestSection onMessageClick={setSelectedMessage} />
+            <MessagesSection
+              onMessageClick={handleMessageClick}
+              onClearFilter={handleClearFilter}
+              selectedOrderKey={selectedOrderKey}
+            />
+          </div>
+
+          {/* Right Column - Details */}
+          <div className="col-span-4 overflow-auto">
+            <DetailsSection selectedMessage={selectedMessage} />
+          </div>
+        </div>
       </main>
     </div>
   );
